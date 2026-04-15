@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>NCWI Educational Chatbot</title>
+
+<style>
+
+body{
+    font-family:Arial,sans-serif;
+    background:#f7f7f7;
+}
+
+/* CHAT WINDOW */
+
+.chat-container{
+    width:360px;
+    height:540px;
+    background:white;
+    border-radius:14px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.18);
+    margin:40px auto;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+}
+
+/* HEADER */
+
+.chat-header{
+    background:#4E1954;
+    color:white;
+    padding:15px;
+    font-size:18px;
+    font-weight:bold;
+    text-align:center;
+}
+
+/* CHAT AREA */
+
+.chat-box{
+    flex:1;
+    padding:12px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.8),rgba(255,255,255,0.8)),
+        url("/static/women-innovators.png");
+    background-size:cover;
+    background-position:center;
+}
+
+/* MESSAGE BUBBLES */
+
+.message{
+    max-width:80%;
+    padding:10px 12px;
+    border-radius:14px;
+    line-height:1.4;
+    word-wrap:break-word;
+}
+
+.user-message{
+    align-self:flex-end;
+    background:#4E1954;
+    color:white;
+}
+
+.bot-message{
+    align-self:flex-start;
+    background:#e6d7ea;
+    color:#222;
+}
+
+/* MARKDOWN */
+
+.message strong{
+    font-weight:bold;
+}
+
+.message ul{
+    margin:6px 0;
+    padding-left:18px;
+}
+
+.message li{
+    margin-bottom:4px;
+}
+
+/* DISCLAIMER */
+
+.chat-disclaimer{
+    font-size:12px;
+    color:#777;
+    margin-top:4px;
+    display:flex;
+    gap:6px;
+    align-items:flex-start;
+    padding-left:4px;
+}
+
+.info-icon{
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    background:#bbb;
+    color:white;
+    font-weight:bold;
+    font-size:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+}
+
+/* SUGGESTIONS */
+
+.suggestion-wrapper{
+    align-self:flex-start;
+    max-width:85%;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.suggestion-buttons{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.suggestion-btn{
+    background:white;
+    border:1px solid #d6c1db;
+    color:#4E1954;
+    border-radius:18px;
+    padding:10px 12px;
+    font-size:13px;
+    text-align:left;
+    cursor:pointer;
+    transition:0.2s ease;
+}
+
+.suggestion-btn:hover{
+    background:#f6eff8;
+    border-color:#b792c1;
+}
+
+/* TYPING */
+
+.typing{
+    font-style:italic;
+    color:#666;
+    font-size:13px;
+}
+
+/* INPUT AREA */
+
+.chat-input{
+    display:flex;
+    border-top:1px solid #ddd;
+    background:white;
+}
+
+.chat-input input{
+    flex:1;
+    border:none;
+    padding:12px;
+    font-size:14px;
+    outline:none;
+}
+
+.chat-input button{
+    border:none;
+    background:#4E1954;
+    color:white;
+    padding:0 18px;
+    cursor:pointer;
+}
+
+.chat-input button:hover{
+    background:#3d1242;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="chat-container">
+
+<div class="chat-header">
+NCWI Educational Chatbot
+</div>
+
+<div id="chat-box" class="chat-box">
+
+<div class="message bot-message">
+<strong>Welcome!</strong> I'm NCWI's educational AI chatbot. I help students explore women innovators and their contributions to science, technology, engineering, and mathematics.
+</div>
+
+<div class="chat-disclaimer">
+<div class="info-icon">i</div>
+<div>
+This chatbot is an educational tool that answers questions using a curated dataset from the National Center of Women's Innovations. The dataset may not include every innovator or historical detail.
+</div>
+</div>
+
+</div>
+
+<div class="chat-input">
+<input id="question" type="text" placeholder="Ask about a woman innovator..." />
+<button onclick="sendQuestion()">Send</button>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+const input = document.getElementById("question");
+const chatBox = document.getElementById("chat-box");
+
+const defaultSuggestions = [
+    "Who is Ada Lovelace?",
+    "What did Grace Hopper invent?",
+    "Which women contributed to space exploration?"
+];
+
+function addMessage(text, className){
+    const msg = document.createElement("div");
+    msg.className = `message ${className}`;
+    msg.innerHTML = marked.parse(text);
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function removeSuggestions(){
+    const wrappers = document.querySelectorAll(".suggestion-wrapper");
+    wrappers.forEach(wrapper => wrapper.remove());
+}
+
+function addSuggestions(questions, introText = "Here are a few questions you can try:"){
+    removeSuggestions();
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "suggestion-wrapper";
+
+    const intro = document.createElement("div");
+    intro.className = "message bot-message";
+    intro.textContent = introText;
+    wrapper.appendChild(intro);
+
+    const buttons = document.createElement("div");
+    buttons.className = "suggestion-buttons";
+
+    questions.forEach(questionText => {
+        const btn = document.createElement("button");
+        btn.className = "suggestion-btn";
+        btn.textContent = questionText;
+        btn.onclick = () => sendSuggestedQuestion(questionText);
+        buttons.appendChild(btn);
+    });
+
+    wrapper.appendChild(buttons);
+    chatBox.appendChild(wrapper);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function sendSuggestedQuestion(questionText){
+    input.value = questionText;
+    await sendQuestion();
+}
+
+async function sendQuestion(){
+    const question = input.value.trim();
+    if(!question) return;
+
+    removeSuggestions();
+    addMessage(question, "user-message");
+    input.value = "";
+
+    const typing = document.createElement("div");
+    typing.className = "typing";
+    typing.id = "typing-indicator";
+    typing.textContent = "NCWI Chatbot is typing...";
+    chatBox.appendChild(typing);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    try{
+        const res = await fetch("/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({message: question})
+        });
+
+        const data = await res.json();
+
+        document.getElementById("typing-indicator").remove();
+
+        addMessage(data.reply || "No response returned.", "bot-message");
+
+        if (data.suggestions && Array.isArray(data.suggestions) && data.suggestions.length > 0){
+            addSuggestions(data.suggestions, "Try one of these questions:");
+        }
+
+    } catch(error){
+        document.getElementById("typing-indicator").remove();
+        addMessage("Something went wrong.", "bot-message");
+        console.error(error);
+    }
+}
+
+input.addEventListener("keypress", function(event){
+    if(event.key === "Enter"){
+        sendQuestion();
+    }
+});
+
+window.addEventListener("load", function(){
+    setTimeout(() => {
+        addSuggestions(defaultSuggestions, "To get started, try one of these questions:");
+    }, 1500);
+});
+</script>
+
+</body>
+</html>
