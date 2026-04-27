@@ -9,8 +9,15 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 app = Flask(__name__)
 
+import os
+
+api_key = os.getenv("OPENAI_API_KEY")
+
+if not api_key:
+    raise ValueError("OPENAI_API_KEY is not set")
+
 endpoint = "https://ncwi-openai.openai.azure.com/"
-api_key = "COPY_THE_KEY_HERE"
+
 deployment = "gpt-4o-mini"
 api_version = "2024-02-15-preview"
 
